@@ -20,6 +20,7 @@ void PID:: reset()
     // Reset the PID controller
     _Ierror = 0.0f;
     _error_prev = 0.0f;
+    _ff = 0.0f;
     
     // All done
     return;
@@ -28,9 +29,8 @@ void PID:: reset()
 float PID::update(float error)
 {
   // Calculate the timestep for the iteration
-  static unsigned long t_prev = 0;
-  float dt = (millis() - t_prev)/1000.f;
-  t_prev = millis();
+  float dt = (millis() - _t_prev)/1000.f;
+  _t_prev = millis();
   
   // Reset the PID controller if it's been more than 1 s since the last run
   if (dt > 1000.0f)
@@ -42,15 +42,15 @@ float PID::update(float error)
   _Perror = error;
   
   _Ierror = _Ierror + error*dt;
-  _Ierror = constrain(_Ierror, -_Imax/fabsf(_kI), _Imax/fabsf(_kI));
+  _Ierror = constrain(_Ierror, -get_Imax()/fabsf(_kI), get_Imax()/fabsf(_kI));
 
   _Derror = (error - _error_prev)/fmaxf(dt,0.00001f);
-  _Derror = constrain(_Derror,-_Dmax/fabsf(_kD),_Dmax/fabsf(_kD));
+  _Derror = constrain(_Derror,-get_Dmax()/fabsf(_kD),get_Dmax()/fabsf(_kD));
   
   _error_prev = error;
   
   // Calculate the new control force
-  float control_force = _kP*_Perror + _kI*_Ierror + _kD*_Derror;
+  float control_force = get_P() + get_I() + get_D() + get_ff();
 
   // Debugging
   if (_debug)
@@ -67,9 +67,3 @@ float PID::update(float error)
   return (control_force);  
 }
 
-// Variable setting functions
-void PID::set_kP(float kP) { _kP = kP; return; }
-void PID::set_kI(float kI) { _kI = kI; return; }
-void PID::set_kD(float kD) { _kD = kD; return; }
-void PID::set_Imax(float Imax) { _Imax = Imax; return; }
-void PID::set_Dmax(float Dmax) { _Dmax = Dmax; return; }

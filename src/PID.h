@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <limits>
 
 #ifndef SERIAL_DEBUG
 #define SERIAL_DEBUG Serial
@@ -26,6 +27,9 @@ class PID {
         void set_Imax(float Imax) { _Imax = Imax; };
         void set_Dmax(float Dmax) { _Dmax = Dmax; };
 
+        void set_OutputMin(float output_min) { _output_min = output_min; };
+        void set_OutputMax(float output_max) { _output_max = output_max; };
+
         // === Get Parameters
         float get_kP()  { return (_kP); };
         float get_kI()  { return (_kI); };
@@ -38,6 +42,9 @@ class PID {
 
         float get_Imax() { return (_Imax); };
         float get_Dmax() { return (_Dmax); };
+
+        float get_OutputMin() { return (_output_min); };
+        float get_OutputMax() { return (_output_max); };
 
         // === Debugging
         uint8_t _debug = 0;
@@ -52,8 +59,12 @@ class PID {
         float _Imax = 1.0f;    // Maximum contribution of the I term on the output
         float _Dmax = 0.3f;    // Maximum contribution of the D term on the output
 
+        float _output_min = -std::numeric_limits<float>::infinity();
+        float _output_max =  std::numeric_limits<float>::infinity();
+
         // Things to remember between loops
         unsigned long _t_prev = 0;
+        float _Ierror_prev = 0.0f;
         float _error_prev = 0.0f;
 
         float _Perror = 0.0f;

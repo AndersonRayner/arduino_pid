@@ -40,6 +40,7 @@ float PID::update(float error)
     // Calculate the new PID contributions
     _Perror = error;
 
+    _Ierror_prev = _Ierror;
     _Ierror = _Ierror + error * dt;
     _Ierror = constrain(_Ierror, -get_Imax()/fabsf(_kI), get_Imax()/fabsf(_kI));
 
@@ -49,7 +50,14 @@ float PID::update(float error)
     _error_prev = error;
 
     // Calculate the new control force
-    float control_force = get_P() + get_I() + get_D() + get_ff();
+    float control_force_raw = get_P() + get_I() + get_D() + get_ff();
+    float control_force = constrain(control_force_raw,_output_min,_output_max);
+
+    if (control_force != control_force_raw)
+    {
+        // We have saturated, don't build up _Ierror
+        _Ierror = _Ierror_prev;
+    }
 
     // Debugging
     if (_debug)
